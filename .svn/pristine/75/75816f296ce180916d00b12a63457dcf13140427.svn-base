@@ -1,0 +1,40 @@
+package br.org.iamar.sgci.service.impl;
+
+import javax.transaction.Transactional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import br.org.iamar.sgci.model.User;
+import br.org.iamar.sgci.repository.UserRepository;
+import br.org.iamar.sgci.service.UserService;
+
+@Service
+public class UserServiceImpl implements UserService {
+
+	@Autowired
+	private UserRepository repository;
+	
+	@Override
+	public User findById(Long id) {
+		return repository.findById(id);
+	}
+
+	@Override
+	public Iterable<User> findAll() {
+		return repository.findAll();
+	}
+
+	@Override
+	@Transactional(rollbackOn = Exception.class)
+	public User save(User user) {
+		return repository.save(user);
+	}
+
+	@Override
+	@Transactional(rollbackOn = Exception.class)
+	public User update(User user) {
+		return repository.save(user);
+	}
+	
+}

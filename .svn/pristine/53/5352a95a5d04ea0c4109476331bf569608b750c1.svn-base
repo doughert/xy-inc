@@ -1,0 +1,64 @@
+package br.org.iamar.sgci.service.impl;
+
+
+import java.util.HashSet;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import br.org.iamar.sgci.model.Profile;
+import br.org.iamar.sgci.model.ViewPost;
+import br.org.iamar.sgci.repository.ViewPostCustomRepository;
+import br.org.iamar.sgci.repository.ViewPostRepository;
+import br.org.iamar.sgci.service.ViewPostService;
+
+
+@Service
+public class ViewPostServiceImpl implements ViewPostService {
+
+    @Autowired
+    private ViewPostRepository viewPostRepository;
+
+    @Autowired
+    private ViewPostCustomRepository viewPostCustomRepository;
+
+
+    @Override
+    public Iterable< Profile > findProfilePostersByProfileViewerId( Long profileViewerId ) {
+
+        return viewPostCustomRepository.findProfilePostersByProfileViewerId( profileViewerId );
+    }
+
+
+    @Override
+    public void save( Profile profileViewer, Iterable< Profile > selectedProfiles ) {
+
+        Iterable< Profile > oldSelectedProfiles = viewPostCustomRepository.findProfilePostersByProfileViewerId( profileViewer.getId() );
+
+        Set< Long > oldSelectedProfilesIds = new HashSet< Long >();
+        for ( Profile oldSelectedProfile : oldSelectedProfiles ) {
+            oldSelectedProfilesIds.add( oldSelectedProfile.getId() );
+        }
+
+        for ( Profile selectedProfile : selectedProfiles ) {
+            if ( oldSelectedProfilesIds.contains( selectedProfile.getId() ) ) {
+                oldSelectedProfilesIds.remove( selectedProfile.getId() );
+            } else {
+
+                ViewPost viewPost = new ViewPost();
+                viewPost.setProfileViewer( profileViewer );
+                viewPost.setProfilePoster( selectedProfile );
+
+                viewPostRepository.save( viewPost );
+            }
+        }
+
+        oldSelectedProfilesIds.forEach( ( oldSelectedProfileId ) -> {
+            ViewPost viewPost = viewPostRepository.findByProfileViewerIdAndProfilePosterId( profileViewer.getId(), oldSelectedProfileId );
+            viewPostRepository.delete( viewPost.getId() );
+        } );
+
+    }
+
+}

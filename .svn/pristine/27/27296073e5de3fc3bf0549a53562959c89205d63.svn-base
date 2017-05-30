@@ -1,0 +1,23 @@
+package br.org.iamar.carbon.repository;
+
+import java.util.List;
+
+import br.org.iamar.carbon.model.InstituicaoTurmaProjetoTarefa;
+import br.org.iamar.carbon.model.Pessoa;
+
+public interface CarbonRepository {
+
+	List<Pessoa> findGestoresAndEducadores(String fullName, String birthdate, String documentNumber, String userType);
+
+	List<Pessoa> findEducandos(String fullName, String birthdate, String documentNumber, String classCode, String studentCode);
+
+	List<Pessoa> findEmbaixadoresAndVoluntarios(String fullName, String birthdate, String documentNumber,
+			String userType);
+
+	List<InstituicaoTurmaProjetoTarefa> findInstituicaoTurmaProjetoTarefaAtivos();
+
+	int insertEducando(String fullName, String birthdate, String documentNumber, String classCode);
+
+	List<InstituicaoTurmaProjetoTarefa> findInstituicaoTurmaProjetoTarefaVoluntariosAtivos();
+
+}

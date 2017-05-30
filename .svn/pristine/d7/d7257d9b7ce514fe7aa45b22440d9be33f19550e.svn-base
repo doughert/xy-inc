@@ -1,0 +1,36 @@
+package br.org.iamar.sgci.repository.impl;
+
+
+import java.util.List;
+
+import org.hibernate.Criteria;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Property;
+import org.hibernate.criterion.Restrictions;
+import org.springframework.stereotype.Repository;
+
+import br.org.iamar.sgci.model.Profile;
+import br.org.iamar.sgci.model.UserProfile;
+import br.org.iamar.sgci.repository.UserProfileCustomRepository;
+
+
+@Repository
+public class UserProfileRepositoryImpl extends GenericCustomRepositoryImpl< UserProfile, Long > implements UserProfileCustomRepository {
+
+    @Override
+    @SuppressWarnings( "unchecked" )
+    public List< Profile > findUserProfilesByUserId( Long userId ) {
+
+        DetachedCriteria detachedCriteria = DetachedCriteria.forClass( UserProfile.class );
+        detachedCriteria.add( Restrictions.eq( "user.id", userId ) );
+        detachedCriteria.createCriteria( "profile" );
+        detachedCriteria.setProjection( Projections.property( "profile.id" ) );
+
+        Criteria criteria = getSession().createCriteria( Profile.class );
+        criteria.add( Property.forName( "id" ).in( detachedCriteria ) );
+
+        return criteria.list();
+    }
+
+}

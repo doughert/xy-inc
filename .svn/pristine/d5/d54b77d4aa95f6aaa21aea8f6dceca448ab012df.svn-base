@@ -1,0 +1,515 @@
+package br.org.iamar.carbon.repository.impl;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+
+import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
+
+import br.org.iamar.carbon.model.InstituicaoTurmaProjetoTarefa;
+import br.org.iamar.carbon.model.Pessoa;
+import br.org.iamar.carbon.repository.CarbonRepository;
+import br.org.iamar.sgci.model.UserTypeEnum;
+
+@Repository
+public class CarbonRepositoryImpl implements CarbonRepository {
+
+	@PersistenceContext(unitName = "carbon")
+	private EntityManager entityManager;
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<Pessoa> findGestoresAndEducadores(String fullName, String birthdate, String documentNumber,
+			String userType) {
+		StringBuilder stringBuilder = new StringBuilder();
+
+		stringBuilder.append(" SELECT ");
+		stringBuilder.append("        case when pessoa.idtipopessoa = 'instrutor' ");
+		stringBuilder.append("        then SUBSTRING_INDEX(SUBSTRING_INDEX(pessoa.nome, ' - ', 1), ' - ', -1) ");
+		stringBuilder.append("        when pessoa.idtipopessoa <> 'instrutor' then pessoa.nome end 'nome', ");
+		stringBuilder.append("        DATE_FORMAT(pessoa.datanasc, '%Y/%m/%d') 'dataNascimento', ");
+		stringBuilder.append("        projeto_aplicador.idprojeto_aplicador 'idProjeto', ");
+		stringBuilder.append("        projeto.projeto 'nomeProjeto', ");
+		stringBuilder.append("        case when pessoa.idtipopessoa = 'instrutor' then pessoa.idPessoa ");
+		stringBuilder.append("        when pessoa.idtipopessoa <> 'instrutor' then NULL end 'idTurma', ");
+		stringBuilder.append("        case when pessoa.idtipopessoa = 'instrutor' ");
+		stringBuilder.append("        then SUBSTRING_INDEX(SUBSTRING_INDEX(pessoa.nome, ' - ', 2), ' - ', -1) ");
+		stringBuilder.append("        when pessoa.idtipopessoa <> 'instrutor' then NULL end 'nomeTurma', ");
+		stringBuilder.append("        case pessoa.idtipopessoa when 'gerente' then 'GESTOR_IAMAR' ");
+		stringBuilder.append("        when 'responsavel' then 'GESTOR_INSTITUICAO' ");
+		stringBuilder.append("        when 'coordenador' then 'GESTOR_INSTITUICAO' ");
+		stringBuilder.append("        when 'instrutor' then 'EDUCADOR' end 'tipoPessoa', ");
+		stringBuilder.append("        aplicador.idaplicador 'idInstituicao', ");
+		stringBuilder.append("        aplicador.razaosocial 'nomeInstituicao', ");
+		stringBuilder.append("        projeto_tarefa.status 'statusTarefa', ");
+		stringBuilder.append("        tplprojetoitem.descr 'nomeTarefa', ");
+		stringBuilder.append("        tplprojetoitem.idtplprojetoitem 'idTarefa', ");
+		stringBuilder.append("        tarefatipo.tarefatipo 'tipoTarefa', ");
+		stringBuilder.append("        projeto_tarefa.data_fim 'dataFimTarefa', ");
+		stringBuilder.append("        pessoa.cpf 'cpf', ");
+		stringBuilder.append("        pessoa.localidade_vem_ser 'regiao' ");
+		stringBuilder.append(" FROM   pessoa ");
+		stringBuilder.append("        INNER JOIN aplicador ");
+		stringBuilder.append("                ON pessoa.instituicao = aplicador.razaosocial ");
+		stringBuilder.append("        INNER JOIN projeto_aplicador ");
+		stringBuilder.append("                ON projeto_aplicador.idaplicador = aplicador.idaplicador ");
+		stringBuilder.append("        INNER JOIN projeto ");
+		stringBuilder.append("                ON projeto.idprojeto = projeto_aplicador.idprojeto ");
+		stringBuilder.append("        LEFT JOIN projeto_tarefa ");
+		stringBuilder.append(
+				"                ON projeto_tarefa.idprojeto_aplicador = projeto_aplicador.idprojeto_aplicador ");
+		stringBuilder.append("        LEFT JOIN tplprojetoitem ");
+		stringBuilder.append("                ON tplprojetoitem.idtplprojetoitem = projeto_tarefa.idtplprojetoitem ");
+		stringBuilder.append("        LEFT JOIN tarefatipo ");
+		stringBuilder.append("                ON tarefatipo.idtarefatipo = tplprojetoitem.idtarefatipo ");
+		stringBuilder.append(" WHERE ");
+		stringBuilder.append("        pessoa.idtipopessoa <> 'participante' ");
+		stringBuilder.append("        AND pessoa.idtipopessoa <> '' ");
+		stringBuilder.append("        AND projeto_tarefa.status <> 'CANCELADO' ");
+		stringBuilder.append("        AND pessoa.datanasc IS NOT NULL ");
+		stringBuilder.append("        AND pessoa.status = 'ATIVO' ");
+		stringBuilder.append("        AND aplicador.status = 'ATIVO' ");
+		stringBuilder.append("        AND projeto_aplicador.status = 'ATIVO' ");
+		stringBuilder.append("        AND projeto.status = 'ATIVO' ");
+		stringBuilder.append("        AND tplprojetoitem.status = 'ATIVO' ");
+		stringBuilder.append("        AND tarefatipo.status = 'ATIVO' ");
+		stringBuilder.append("        AND projeto_tarefa.data_fim <> CONVERT(0,DATETIME) ");
+
+		if (UserTypeEnum.EDUCADOR.name().equals(userType)) {
+			stringBuilder.append("        AND pessoa.idtipopessoa = 'instrutor' ");
+		} else if (UserTypeEnum.GESTOR_INSTITUICAO.name().equals(userType)) {
+			stringBuilder.append("        AND (pessoa.idtipopessoa = 'responsavel' ");
+			stringBuilder.append("        OR pessoa.idtipopessoa = 'coordenador') ");
+		} else if (UserTypeEnum.GESTOR_IAMAR.name().equals(userType)) {
+			stringBuilder.append("        AND pessoa.idtipopessoa = 'gerente' ");
+		}
+
+		if (!StringUtils.isEmpty(documentNumber)) {
+			stringBuilder.append("        AND pessoa.cpf = '" + documentNumber + "'");
+		} else {
+
+			if (UserTypeEnum.EDUCADOR.name().equals(userType)) {
+				stringBuilder
+						.append("        AND SUBSTRING_INDEX(SUBSTRING_INDEX(pessoa.nome, ' - ', 1), ' - ', -1) = '"
+								+ fullName + "'");
+			} else {
+				stringBuilder.append("        AND pessoa.nome = '" + fullName + "'");
+			}
+
+			stringBuilder.append("        AND pessoa.datanasc = '" + birthdate + "'");
+		}
+
+		Query query = entityManager.createNativeQuery(stringBuilder.toString());
+
+		List<Object[]> result = query.getResultList();
+		List<Pessoa> pessoas = new ArrayList<Pessoa>();
+
+		for (Object[] object : result) {
+			Pessoa pessoa = new Pessoa();
+
+			pessoa.setNome(object[0] != null ? object[0].toString() : "");
+
+			pessoa.setDataNascimento(object[1] != null ? object[1].toString() : "");
+
+			pessoa.setIdProjeto(object[2] != null ? object[2].toString() : "");
+
+			pessoa.setNomeProjeto(object[3] != null ? object[3].toString() : "");
+
+			pessoa.setIdTurma(object[4] != null ? object[4].toString() : "");
+
+			pessoa.setNomeTurma(object[5] != null ? object[5].toString() : "");
+
+			pessoa.setTipoPessoa(object[6] != null ? object[6].toString() : "");
+
+			pessoa.setIdInstituicao(object[7] != null ? object[7].toString() : "");
+
+			pessoa.setNomeInstituicao(object[8] != null ? object[8].toString() : "");
+
+			pessoa.setStatusTarefa(object[9] != null ? object[9].toString() : "");
+
+			pessoa.setNomeTarefa(object[10] != null ? object[10].toString() : "");
+
+			pessoa.setIdTarefa(object[11] != null ? object[11].toString() : "");
+
+			pessoa.setTipoTarefa(object[12] != null ? object[12].toString() : "");
+
+			pessoa.setDataFimTarefa(object[13] != null ? object[13].toString() : "");
+
+			pessoa.setCpf(object[14] != null ? object[14].toString() : "");
+			
+			pessoa.setRegiao(object[15] != null ? object[15].toString() : "");
+
+			pessoa.setPrefixoId("");
+
+			pessoas.add(pessoa);
+		}
+
+		return pessoas;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<Pessoa> findEducandos(String fullName, String birthdate, String documentNumber, String classCode,
+			String studentCode) {
+
+		StringBuilder stringBuilder = new StringBuilder();
+
+		stringBuilder.append(" SELECT ");
+		stringBuilder.append("    cad_jovem_pessoa.nome, ");
+		stringBuilder.append("    DATE_FORMAT(cad_jovem_pessoa.datanasc, '%Y/%m/%d') 'dataNascimento', ");
+		stringBuilder.append("    projeto_aplicador.idprojeto_aplicador 'idProjeto', ");
+		stringBuilder.append("    projeto.projeto 'nomeProjeto', ");
+		stringBuilder.append("    cad_jovem_pessoa.idTurma 'idTurma', ");
+		stringBuilder.append("    SUBSTRING_INDEX(SUBSTRING_INDEX(pessoa.nome, ' - ', 2), ' - ', -1) 'nomeTurma', ");
+		stringBuilder.append("    'EDUCANDO' AS 'tipoPessoa', ");
+		stringBuilder.append("    aplicador.idaplicador 'idInstituicao', ");
+		stringBuilder.append("    aplicador.razaosocial 'nomeInstituicao', ");
+		stringBuilder.append("    projeto_tarefa.status 'statusTarefa', ");
+		stringBuilder.append("    tplprojetoitem.descr 'nomeTarefa', ");
+		stringBuilder.append("    tplprojetoitem.idtplprojetoitem 'idTarefa', ");
+		stringBuilder.append("    tarefatipo.tarefatipo 'tipoTarefa', ");
+		stringBuilder.append("    projeto_tarefa.data_fim 'dataFimTarefa', ");
+		stringBuilder.append("    cad_jovem_pessoa.cpf 'cpf', ");
+		stringBuilder.append("    cad_jovem_pessoa.id_jovem 'studentCode' ");
+		stringBuilder.append(" FROM   cad_jovem_pessoa ");
+		stringBuilder.append("    INNER JOIN aplicador ");
+		stringBuilder.append("            ON cad_jovem_pessoa.id_instituicao = aplicador.idaplicador ");
+		stringBuilder.append("    INNER JOIN projeto_aplicador ");
+		stringBuilder.append("            ON projeto_aplicador.idaplicador = aplicador.idaplicador ");
+		stringBuilder.append("    INNER JOIN projeto ");
+		stringBuilder.append("             ON projeto.idprojeto = projeto_aplicador.idprojeto ");
+		stringBuilder.append("    LEFT JOIN projeto_tarefa ");
+		stringBuilder
+				.append("             ON projeto_tarefa.idprojeto_aplicador = projeto_aplicador.idprojeto_aplicador ");
+		stringBuilder.append("    LEFT JOIN tplprojetoitem ");
+		stringBuilder.append("             ON tplprojetoitem.idtplprojetoitem = projeto_tarefa.idtplprojetoitem ");
+		stringBuilder.append("    LEFT JOIN tarefatipo ");
+		stringBuilder.append("             ON tarefatipo.idtarefatipo = tplprojetoitem.idtarefatipo ");
+		stringBuilder.append("    INNER JOIN pessoa ");
+		stringBuilder.append("             ON pessoa.instituicao = aplicador.razaosocial ");
+		stringBuilder.append("                 AND pessoa.idtipopessoa = 'Instrutor' ");
+		stringBuilder.append(" WHERE ");
+		stringBuilder.append("    cad_jovem_pessoa.status = 1 ");
+		stringBuilder.append("    AND aplicador.status = 'ATIVO' ");
+		stringBuilder.append("    AND projeto_aplicador.status = 'ATIVO' ");
+		stringBuilder.append("    AND projeto.status = 'ATIVO' ");
+		stringBuilder.append("    AND tplprojetoitem.status = 'ATIVO' ");
+		stringBuilder.append("    AND tarefatipo.status = 'ATIVO' ");
+		stringBuilder.append("    AND pessoa.status = 'ATIVO' ");
+		stringBuilder.append("    AND cad_jovem_pessoa.idTurma IS NOT NULL ");
+		stringBuilder.append("    AND projeto_tarefa.data_fim <> CONVERT(0,DATETIME) ");
+
+		if (!StringUtils.isEmpty(documentNumber)) {
+			stringBuilder.append("    AND cad_jovem_pessoa.cpf = '" + documentNumber + "'");
+		} else {
+
+			stringBuilder.append("    AND cad_jovem_pessoa.nome = '" + fullName + "'");
+			stringBuilder.append("    AND cad_jovem_pessoa.datanasc = '" + birthdate + "'");
+		}
+
+		stringBuilder.append("    AND cad_jovem_pessoa.idTurma = " + classCode);
+		stringBuilder.append("    AND cad_jovem_pessoa.id_jovem = " + studentCode);
+
+		Query query = entityManager.createNativeQuery(stringBuilder.toString());
+
+		List<Object[]> result = query.getResultList();
+		List<Pessoa> pessoas = new ArrayList<Pessoa>();
+
+		for (Object[] object : result) {
+			Pessoa pessoa = new Pessoa();
+
+			pessoa.setNome(object[0] != null ? object[0].toString() : "");
+
+			pessoa.setDataNascimento(object[1] != null ? object[1].toString() : "");
+
+			pessoa.setIdProjeto(object[2] != null ? object[2].toString() : "");
+
+			pessoa.setNomeProjeto(object[3] != null ? object[3].toString() : "");
+
+			pessoa.setIdTurma(object[4] != null ? object[4].toString() : "");
+
+			pessoa.setNomeTurma(object[5] != null ? object[5].toString() : "");
+
+			pessoa.setTipoPessoa(object[6] != null ? object[6].toString() : "");
+
+			pessoa.setIdInstituicao(object[7] != null ? object[7].toString() : "");
+
+			pessoa.setNomeInstituicao(object[8] != null ? object[8].toString() : "");
+
+			pessoa.setStatusTarefa(object[9] != null ? object[9].toString() : "");
+
+			pessoa.setNomeTarefa(object[10] != null ? object[10].toString() : "");
+
+			pessoa.setIdTarefa(object[11] != null ? object[11].toString() : "");
+
+			pessoa.setTipoTarefa(object[12] != null ? object[12].toString() : "");
+
+			pessoa.setCpf(object[13] != null ? object[13].toString() : "");
+
+			pessoa.setStudentCode(object[14] != null ? object[14].toString() : "");
+
+			pessoa.setPrefixoId("");
+
+			pessoas.add(pessoa);
+		}
+
+		return pessoas;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<Pessoa> findEmbaixadoresAndVoluntarios(String fullName, String birthdate, String documentNumber,
+			String userType) {
+
+		StringBuilder stringBuilder = new StringBuilder();
+
+		stringBuilder.append(" SELECT ");
+		stringBuilder.append("    voluntario_pessoa.nome, ");
+		stringBuilder.append("    DATE_FORMAT(voluntario_pessoa.datanasc, '%Y/%m/%d') 'dataNascimento', ");
+		stringBuilder.append("    CASE voluntario_pessoa.funcao_vem_ser ");
+		stringBuilder.append("      WHEN 0 THEN 'VOLUNTARIO' ");
+		stringBuilder.append("      ELSE 'EMBAIXADOR' ");
+		stringBuilder.append("    END 'tipoPessoa', ");
+		stringBuilder.append("    voluntario_pessoa.localidade_vem_ser 'regiao', ");
+		stringBuilder.append("    6 'idInstituicao', ");
+		stringBuilder.append("    'Iamar' AS 'nomeInstituicao', ");
+		stringBuilder.append("    voluntario_atividade.idatividade 'idProjeto', ");
+		stringBuilder.append("    voluntario_atividade.nome_atividade 'nomeProjeto', ");
+		stringBuilder.append("    voluntario_atividade.idatividade 'idTarefa', ");
+		stringBuilder.append("    voluntario_atividade.nome_atividade 'nomeTarefa', ");
+		stringBuilder.append("    voluntario_pessoa.cpf 'cpf' ");
+		stringBuilder.append(" FROM   voluntario_pessoa ");
+		stringBuilder.append("        LEFT JOIN voluntario_pessoa_atividade  ");
+		stringBuilder.append("               ON voluntario_pessoa_atividade.id_pessoa = ");
+		stringBuilder.append("                  voluntario_pessoa.idpessoa ");
+		stringBuilder.append("        LEFT JOIN voluntario_atividade ");
+		stringBuilder.append("               ON voluntario_atividade.idatividade = ");
+		stringBuilder.append("                  voluntario_pessoa_atividade.id_atividade ");
+		stringBuilder.append(" WHERE ");
+		stringBuilder.append("    voluntario_pessoa.datanasc IS NOT NULL ");
+		stringBuilder.append("    AND voluntario_pessoa.status = 1 ");
+
+		if (!StringUtils.isEmpty(documentNumber)) {
+			stringBuilder.append("    AND voluntario_pessoa.cpf = '" + documentNumber + "' ");
+		} else {
+
+			stringBuilder.append("    AND voluntario_pessoa.nome = '" + fullName + "' ");
+			stringBuilder.append("    AND Date_format(voluntario_pessoa.datanasc, '%Y/%m/%d') = '" + birthdate + "' ");
+		}
+
+		if (UserTypeEnum.VOLUNTARIO.name().equals(userType)) {
+			stringBuilder.append("    AND voluntario_pessoa.funcao_vem_ser = 0 ");
+		}
+
+		Query query = entityManager.createNativeQuery(stringBuilder.toString());
+
+		List<Object[]> result = query.getResultList();
+		List<Pessoa> pessoas = new ArrayList<Pessoa>();
+
+		for (Object[] object : result) {
+			Pessoa pessoa = new Pessoa();
+
+			pessoa.setNome(object[0] != null ? object[0].toString() : "");
+
+			pessoa.setDataNascimento(object[1] != null ? object[1].toString() : "");
+
+			pessoa.setTipoPessoa(object[2] != null ? object[2].toString() : "");
+
+			pessoa.setRegiao(object[3] != null ? object[3].toString() : "");
+
+			pessoa.setIdInstituicao(object[4] != null ? object[4].toString() : "");
+
+			pessoa.setNomeInstituicao(object[5] != null ? object[5].toString() : "");
+
+			pessoa.setIdProjeto(object[6] != null ? object[6].toString() : "");
+
+			pessoa.setNomeProjeto(object[7] != null ? object[7].toString() : "");
+
+			pessoa.setIdTarefa(object[8] != null ? object[8].toString() : "");
+
+			pessoa.setNomeTarefa(object[9] != null ? object[9].toString() : "");
+
+			pessoa.setCpf(object[10] != null ? object[10].toString() : "");
+
+			pessoa.setPrefixoId("V");
+
+			pessoas.add(pessoa);
+		}
+
+		return pessoas;
+
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<InstituicaoTurmaProjetoTarefa> findInstituicaoTurmaProjetoTarefaAtivos() {
+
+		StringBuilder stringBuilder = new StringBuilder();
+
+		stringBuilder.append(" SELECT  ");
+		stringBuilder.append("        aplicador.idaplicador 'idInstituicao', ");
+		stringBuilder.append("        aplicador.nomefantasia 'nomeInstituicao', ");
+		stringBuilder.append("        pessoa.idpessoa 'idTurma', ");
+		stringBuilder
+				.append("        Substring_index(Substring_index(pessoa.nome, ' - ', 2), ' - ', -1) 'nomeTurma', ");
+		stringBuilder.append("        projeto_aplicador.idprojeto_aplicador 'idProjeto', ");
+		stringBuilder.append("        projeto.projeto 'nomeProjeto', ");
+		stringBuilder.append("        tplprojetoitem.idtplprojetoitem 'idTarefa', ");
+		stringBuilder.append("        tplprojetoitem.descr 'nomeTarefa', ");
+		stringBuilder.append("        projeto_tarefa.data_fim 'dataFimTarefa', ");
+		stringBuilder.append("        tarefatipo.tarefatipo 'tipoTarefa', ");
+		stringBuilder.append("        projeto_tarefa.status 'statusTarefa', ");
+		stringBuilder.append("        cad_jovem_pessoa.id_jovem 'studentCode', ");
+		stringBuilder.append("        cad_jovem_pessoa.nome 'studentName' ");
+		stringBuilder.append(" FROM   pessoa ");
+		stringBuilder.append("        INNER JOIN aplicador ");
+		stringBuilder.append("                ON pessoa.instituicao = aplicador.razaosocial ");
+		stringBuilder.append("        INNER JOIN projeto_aplicador ");
+		stringBuilder.append("                ON projeto_aplicador.idaplicador = aplicador.idaplicador ");
+		stringBuilder.append("        INNER JOIN projeto ");
+		stringBuilder.append("                ON projeto.idprojeto = projeto_aplicador.idprojeto ");
+		stringBuilder.append("        LEFT JOIN projeto_tarefa ");
+		stringBuilder.append("               ON projeto_tarefa.idprojeto_aplicador = ");
+		stringBuilder.append("                  projeto_aplicador.idprojeto_aplicador ");
+		stringBuilder.append("        LEFT JOIN tplprojetoitem ");
+		stringBuilder.append("               ON tplprojetoitem.idtplprojetoitem = ");
+		stringBuilder.append("                  projeto_tarefa.idtplprojetoitem ");
+		stringBuilder.append("        LEFT JOIN tarefatipo ");
+		stringBuilder.append("               ON tarefatipo.idtarefatipo = tplprojetoitem.idtarefatipo ");
+		stringBuilder.append("        LEFT JOIN  cad_jovem_pessoa");
+		stringBuilder.append("               ON cad_jovem_pessoa.idTurma = pessoa.idpessoa ");
+		stringBuilder.append(" WHERE  (pessoa.idtipopessoa = 'instrutor' OR pessoa.idtipopessoa = 'gerente') ");
+		stringBuilder.append("        AND pessoa.status = 'ATIVO' ");
+		stringBuilder.append("        AND projeto_tarefa.status <> 'CANCELADO' ");
+		stringBuilder.append("        AND aplicador.status = 'ATIVO' ");
+		stringBuilder.append("        AND projeto_aplicador.status = 'ATIVO' ");
+		stringBuilder.append("        AND projeto.status = 'ATIVO' ");
+		stringBuilder.append("        AND projeto_tarefa.data_fim <> CONVERT(0,DATETIME) ");
+		stringBuilder.append("        AND cad_jovem_pessoa.status = 1 ");
+
+		Query query = entityManager.createNativeQuery(stringBuilder.toString());
+
+		List<Object[]> result = query.getResultList();
+		List<InstituicaoTurmaProjetoTarefa> itpts = new ArrayList<InstituicaoTurmaProjetoTarefa>();
+
+		for (Object[] object : result) {
+			InstituicaoTurmaProjetoTarefa itpt = new InstituicaoTurmaProjetoTarefa();
+
+			itpt.setIdInstituicao(object[0] != null ? object[0].toString() : "");
+
+			itpt.setNomeInstituicao(object[1] != null ? object[1].toString() : "");
+
+			itpt.setIdTurma(object[2] != null ? object[2].toString() : "");
+
+			itpt.setNomeTurma(object[3] != null ? object[3].toString() : "");
+
+			itpt.setIdProjeto(object[4] != null ? object[4].toString() : "");
+
+			itpt.setNomeProjeto(object[5] != null ? object[5].toString() : "");
+
+			itpt.setIdTarefa(object[6] != null ? object[6].toString() : "");
+
+			itpt.setNomeTarefa(object[7] != null ? object[7].toString() : "");
+
+			itpt.setDataFimTarefa(object[8] != null ? object[8].toString() : "");
+
+			itpt.setTipoTarefa(object[9] != null ? object[9].toString() : "");
+
+			itpt.setStatusTarefa(object[10] != null ? object[10].toString() : "");
+
+			itpt.setStudentCode(object[11] != null ? object[11].toString() : "");
+			
+			itpt.setStudentName(object[12] != null ? object[12].toString() : "");
+
+			itpt.setPrefixoId("");
+
+			itpts.add(itpt);
+		}
+
+		return itpts;
+
+	}
+
+	@Override
+	public int insertEducando(String fullName, String birthdate, String documentNumber, String classCode) {
+
+		StringBuilder stringBuilder = new StringBuilder();
+
+		stringBuilder.append(" INSERT INTO carbonzape.cad_jovem_pessoa ");
+		stringBuilder.append("         (nome, ");
+		stringBuilder.append("          datanasc, ");
+		stringBuilder.append("          cpf, ");
+		stringBuilder.append("          idturma) ");
+		stringBuilder.append(" VALUES  (:nome, ");
+		stringBuilder.append("          :datanasc, ");
+		stringBuilder.append("          :cpf, ");
+		stringBuilder.append("          :idturma) ");
+
+		Query query = entityManager.createNativeQuery(stringBuilder.toString());
+
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
+
+		query.setParameter("nome", fullName);
+		try {
+			query.setParameter("datanasc", dateFormat.parse(birthdate));
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		query.setParameter("cpf", documentNumber);
+		query.setParameter("idturma", classCode);
+
+		return query.executeUpdate();
+
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<InstituicaoTurmaProjetoTarefa> findInstituicaoTurmaProjetoTarefaVoluntariosAtivos() {
+
+		StringBuilder stringBuilder = new StringBuilder();
+
+		stringBuilder.append(" SELECT 6                               'idInstituicao', ");
+		stringBuilder.append("    'Iamar'                             AS 'nomeInstituicao', ");
+		stringBuilder.append("    voluntario_atividade.idatividade    'idProjeto', ");
+		stringBuilder.append("    voluntario_atividade.nome_atividade 'nomeProjeto', ");
+		stringBuilder.append("    voluntario_atividade.idatividade    'idTarefa', ");
+		stringBuilder.append("    voluntario_atividade.nome_atividade 'nomeTarefa' ");
+		stringBuilder.append(" FROM   voluntario_atividade ");
+		stringBuilder.append(" WHERE  status = 'ativo'; ");
+
+		Query query = entityManager.createNativeQuery(stringBuilder.toString());
+
+		List<Object[]> result = query.getResultList();
+		List<InstituicaoTurmaProjetoTarefa> itpts = new ArrayList<InstituicaoTurmaProjetoTarefa>();
+
+		for (Object[] object : result) {
+			InstituicaoTurmaProjetoTarefa itpt = new InstituicaoTurmaProjetoTarefa();
+
+			itpt.setIdInstituicao(object[0] != null ? object[0].toString() : "");
+
+			itpt.setNomeInstituicao(object[1] != null ? object[1].toString() : "");
+
+			itpt.setIdProjeto(object[2] != null ? object[2].toString() : "");
+
+			itpt.setNomeProjeto(object[3] != null ? object[3].toString() : "");
+
+			itpt.setIdTarefa(object[4] != null ? object[4].toString() : "");
+
+			itpt.setNomeTarefa(object[5] != null ? object[5].toString() : "");
+
+			itpt.setPrefixoId("V");
+
+			itpts.add(itpt);
+		}
+
+		return itpts;
+	}
+
+}

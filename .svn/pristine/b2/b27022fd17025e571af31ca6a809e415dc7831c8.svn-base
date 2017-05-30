@@ -1,0 +1,35 @@
+package br.org.iamar.sgci;
+
+import org.junit.Test;
+
+/*@RunWith(SpringRunner.class)
+@SpringBootTest*/
+public class SgciApplicationTests {
+
+	@Test
+	public void contextLoads() {
+		
+		String nome = "DOUGHERT VASCONCELOS FERNANDES";
+		
+		String dataNascimento = "07/08/1991";
+		
+		String nomeLowerCase = nome.toLowerCase();
+		
+		String[] tokens = nomeLowerCase.split(" ");
+		
+		int index = tokens.length - 1;
+		
+		String primeiroNome = tokens[0];
+		
+		String ultimoNome = tokens[index];
+		
+		if(tokens[index].equals("filho") || tokens[index].equals("júnior") || tokens[index].equals("junior")) {
+			ultimoNome = tokens[index - 1];
+		}
+		
+		dataNascimento = dataNascimento.replaceAll("/", "");
+		
+		System.out.println(primeiroNome + "_" + ultimoNome + "_" + dataNascimento);
+	}
+
+}

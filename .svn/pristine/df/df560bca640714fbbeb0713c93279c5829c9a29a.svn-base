@@ -1,0 +1,125 @@
+SELECT CASE 
+         WHEN pessoa.idtipopessoa = 'instrutor' THEN 
+         Substring_index(Substring_index( 
+                         pessoa.nome, ' - ' 
+                         , 1), ' - ', -1) 
+         WHEN pessoa.idtipopessoa <> 'instrutor' THEN pessoa.nome 
+       END                                      'nome', 
+       Date_format(pessoa.datanasc, '%Y-%m-%d') 'dataNascimento', 
+       projeto_aplicador.idprojeto_aplicador    'idProjeto', 
+       projeto.projeto                          'nomeProjeto', 
+       CASE 
+         WHEN pessoa.idtipopessoa = 'instrutor' THEN pessoa.idpessoa 
+         WHEN pessoa.idtipopessoa <> 'instrutor' THEN NULL 
+       END                                      'idTurma', 
+       CASE 
+         WHEN pessoa.idtipopessoa = 'instrutor' THEN 
+         Substring_index(Substring_index( 
+                         pessoa.nome, ' - ' 
+                         , 2), ' - ', -1) 
+         WHEN pessoa.idtipopessoa <> 'instrutor' THEN NULL 
+       END                                      'nomeTurma', 
+       CASE pessoa.idtipopessoa 
+         WHEN 'gerente' THEN 'GESTOR_DO_IAMAR' 
+         WHEN 'responsavel' THEN 'GESTOR_DE_INSTITUICAO' 
+         WHEN 'coordenador' THEN 'GESTOR_DE_INSTITUICAO' 
+         WHEN 'instrutor' THEN 'EDUCADOR' 
+       END                                      'tipoPessoa', 
+       aplicador.idaplicador                    'idInstituicao', 
+       aplicador.nomefantasia                   'nomeInstituicao', 
+       projeto_tarefa.status                    'statusTarefa', 
+       tplprojetoitem.descr                     'nomeTarefa', 
+       tplprojetoitem.idtplprojetoitem          'idTarefa', 
+       tarefatipo.tarefatipo                    'tipoTarefa', 
+       projeto_tarefa.data_fim                  'dataFimTarefa' 
+FROM   pessoa 
+       INNER JOIN aplicador 
+               ON pessoa.instituicao = aplicador.nomefantasia 
+       INNER JOIN projeto_aplicador 
+               ON projeto_aplicador.idaplicador = aplicador.idaplicador 
+       INNER JOIN projeto 
+               ON projeto.idprojeto = projeto_aplicador.idprojeto 
+       LEFT JOIN projeto_tarefa 
+              ON projeto_tarefa.idprojeto_aplicador = 
+                 projeto_aplicador.idprojeto_aplicador 
+       LEFT JOIN tplprojetoitem 
+              ON tplprojetoitem.idtplprojetoitem = 
+                 projeto_tarefa.idtplprojetoitem 
+       LEFT JOIN tarefatipo 
+              ON tarefatipo.idtarefatipo = tplprojetoitem.idtarefatipo 
+WHERE  pessoa.idtipopessoa <> 'participante' 
+       AND projeto_tarefa.status <> 'CANCELADO' 
+       AND pessoa.datanasc IS NOT NULL 
+       AND pessoa.status = 'ATIVO' 
+       AND aplicador.status = 'ATIVO' 
+       AND projeto_aplicador.status = 'ATIVO' 
+       AND projeto.status = 'ATIVO' 
+       AND tplprojetoitem.status = 'ATIVO' 
+       AND tarefatipo.status = 'ATIVO';
+
+SELECT cad_jovem_pessoa.nome, 
+       Date_format(cad_jovem_pessoa.datanasc, '%Y-%m-%d') 
+       'dataNascimento', 
+       projeto_aplicador.idprojeto_aplicador 
+       'idProjeto', 
+       projeto.projeto 
+       'nomeProjeto', 
+       cad_jovem_pessoa.idturma 
+       'idTurma', 
+       Substring_index(Substring_index(pessoa.nome, ' - ', 2), ' - ', -1) 
+       'nomeTurma', 
+       'EDUCANDO'                                                         AS 
+       'tipoPessoa', 
+       aplicador.idaplicador 
+       'idInstituicao', 
+       aplicador.nomefantasia 
+       'nomeInstituicao', 
+       projeto_tarefa.status 
+       'statusTarefa', 
+       tplprojetoitem.descr 
+       'nomeTarefa', 
+       tplprojetoitem.idtplprojetoitem 
+       'idTarefa', 
+       tarefatipo.tarefatipo 
+       'tipoTarefa', 
+       projeto_tarefa.data_fim 
+       'dataFimTarefa' 
+FROM   cad_jovem_pessoa 
+       INNER JOIN aplicador 
+               ON cad_jovem_pessoa.id_instituicao = aplicador.idaplicador 
+       INNER JOIN projeto_aplicador 
+               ON projeto_aplicador.idaplicador = aplicador.idaplicador 
+       INNER JOIN projeto 
+               ON projeto.idprojeto = projeto_aplicador.idprojeto 
+       LEFT JOIN projeto_tarefa 
+              ON projeto_tarefa.idprojeto_aplicador = 
+                 projeto_aplicador.idprojeto_aplicador 
+       LEFT JOIN tplprojetoitem 
+              ON tplprojetoitem.idtplprojetoitem = 
+                 projeto_tarefa.idtplprojetoitem 
+       LEFT JOIN tarefatipo 
+              ON tarefatipo.idtarefatipo = tplprojetoitem.idtarefatipo 
+       INNER JOIN pessoa 
+               ON pessoa.instituicao = aplicador.nomefantasia 
+                  AND pessoa.idtipopessoa = 'Instrutor' 
+WHERE  cad_jovem_pessoa.datanasc IS NOT NULL 
+       AND cad_jovem_pessoa.status = 1 
+       AND aplicador.status = 'ATIVO' 
+       AND projeto_aplicador.status = 'ATIVO' 
+       AND projeto.status = 'ATIVO' 
+       AND tplprojetoitem.status = 'ATIVO' 
+       AND tarefatipo.status = 'ATIVO' 
+       AND pessoa.status = 'ATIVO' 
+       AND cad_jovem_pessoa.idturma IS NOT NULL;
+
+
+SELECT voluntario_pessoa.nome, 
+       Date_format(voluntario_pessoa.datanasc, '%Y-%m-%d') 'dataNascimento', 
+       CASE voluntario_pessoa.funcao_vem_ser 
+         WHEN 0 THEN 'VOLUNTARIO' 
+         ELSE 'EMBAIXADOR' 
+       END                                                 'tipoPessoa', 
+       voluntario_pessoa.localidade_vem_ser                'regiao' 
+FROM   voluntario_pessoa 
+WHERE  voluntario_pessoa.datanasc IS NOT NULL 
+       AND voluntario_pessoa.status = 1;

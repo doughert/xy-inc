@@ -1,0 +1,14 @@
+package br.org.iamar.sgci.service;
+
+
+import br.org.iamar.sgci.model.Profile;
+
+
+public interface ViewPostService {
+
+    Iterable< Profile > findProfilePostersByProfileViewerId( Long profileViewerId );
+
+
+    void save( Profile profileViewer, Iterable< Profile > selectedProfiles );
+
+}

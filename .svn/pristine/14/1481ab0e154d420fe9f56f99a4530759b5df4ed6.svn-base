@@ -1,0 +1,21 @@
+package br.org.iamar.sgci.service.impl;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import br.org.iamar.sgci.model.Feature;
+import br.org.iamar.sgci.repository.FeatureRepository;
+import br.org.iamar.sgci.service.FeatureService;
+
+@Service
+public class FeatureServiceImpl implements FeatureService {
+
+	@Autowired
+	private FeatureRepository featureRepository;
+	
+	@Override
+	public Iterable<Feature> findAll() {
+		return featureRepository.findAll();
+	}
+
+}

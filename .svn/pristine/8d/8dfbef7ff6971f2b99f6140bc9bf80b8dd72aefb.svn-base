@@ -1,0 +1,66 @@
+package br.org.iamar.sgci.service.impl;
+
+
+import java.util.HashSet;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import br.org.iamar.sgci.model.Feature;
+import br.org.iamar.sgci.model.Profile;
+import br.org.iamar.sgci.model.ProfileFeature;
+import br.org.iamar.sgci.repository.ProfileFeatureCustomRepository;
+import br.org.iamar.sgci.repository.ProfileFeatureRepository;
+import br.org.iamar.sgci.service.ProfileFeatureService;
+
+
+@Service
+public class ProfileFeatureServiceImpl implements ProfileFeatureService {
+
+    @Autowired
+    private ProfileFeatureRepository profileFeatureRepository;
+    
+    @Autowired
+    private ProfileFeatureCustomRepository customRepository;
+
+
+    @Override
+    public Iterable< Feature > findProfileFeaturesByProfileId( Long profileId ) {
+
+        return customRepository.findProfileFeaturesByProfileId( profileId );
+    }
+
+
+    @Override
+    public void save( Profile profile, Iterable< Feature > selectedFeatures ) {
+        
+        Iterable< Feature > oldSelectedFeatures = customRepository.findProfileFeaturesByProfileId( profile.getId() );
+        
+        Set<Long> oldSelectedFeaturesIds = new HashSet<Long>();
+        for(Feature oldSelectedFeature : oldSelectedFeatures) {
+            oldSelectedFeaturesIds.add( oldSelectedFeature.getId() );
+        }
+        
+        for(Feature selectedFeature : selectedFeatures) {
+            if(oldSelectedFeaturesIds.contains( selectedFeature.getId() )) {
+                oldSelectedFeaturesIds.remove( selectedFeature.getId() );
+            } else {
+                
+                
+                ProfileFeature profileFeature = new ProfileFeature();
+                profileFeature.setProfile( profile );
+                profileFeature.setFeature( selectedFeature );
+                
+                profileFeatureRepository.save( profileFeature );
+            }
+        }
+        
+        oldSelectedFeaturesIds.forEach( (oldSelectedFeatureId) -> {
+            ProfileFeature profileFeature = profileFeatureRepository.findByProfileIdAndFeatureId( profile.getId(), oldSelectedFeatureId );
+            profileFeatureRepository.delete( profileFeature.getId() );
+        });
+        
+    }
+
+}

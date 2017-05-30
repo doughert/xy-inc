@@ -1,0 +1,18 @@
+package br.org.iamar.carbon.service;
+
+import java.util.List;
+
+import br.org.iamar.carbon.model.InstituicaoTurmaProjetoTarefa;
+import br.org.iamar.carbon.model.Pessoa;
+
+public interface CarbonService {
+
+	List<Pessoa> findAllPessoas();
+
+	List<Pessoa> findUser(String fullName, String birthdate, String documentNumber, String classCode, String userType, String studentCode);
+
+	List<InstituicaoTurmaProjetoTarefa> findInstituicaoTurmaProjetoTarefaAtivos();
+
+	void insertEducando(String fullName, String birthdate, String documentNumber, String classCode);
+
+}

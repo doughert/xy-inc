@@ -1,0 +1,48 @@
+package br.org.iamar.sgci.repository.impl;
+
+
+import java.io.Serializable;
+import java.lang.reflect.ParameterizedType;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
+import org.hibernate.Criteria;
+import org.hibernate.Session;
+
+import br.org.iamar.sgci.repository.GenericCustomRepository;
+
+
+public abstract class GenericCustomRepositoryImpl< T, PK extends Serializable > implements GenericCustomRepository< T, PK > {
+
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    private Class< T > persistentClass;
+
+
+    @SuppressWarnings( "unchecked" )
+    public GenericCustomRepositoryImpl() {
+        persistentClass = (Class< T >) ( (ParameterizedType) getClass().getGenericSuperclass() ).getActualTypeArguments()[ 0 ];
+    }
+
+
+    public Class< T > getPersistentClass() {
+
+        return persistentClass;
+    }
+
+
+    @Override
+    public Session getSession() {
+
+        return entityManager.unwrap( Session.class );
+    }
+
+
+    public Criteria createCriteria() {
+
+        return getSession().createCriteria( getPersistentClass() );
+    }
+
+}

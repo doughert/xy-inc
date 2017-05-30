@@ -1,0 +1,41 @@
+package br.org.iamar.sgci.controller;
+
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import br.org.iamar.sgci.model.Profile;
+import br.org.iamar.sgci.model.User;
+import br.org.iamar.sgci.service.UserProfileService;
+
+
+@RestController
+@RequestMapping( value = "/user-profile" )
+public class UserProfileController {
+
+    @Autowired
+    private UserProfileService userProfileService;
+
+
+    @GetMapping( "/user/{userId}" )
+    public Iterable< Profile > findUserProfilesByUserId( @PathVariable( "userId" ) Long userId ) {
+
+        return userProfileService.findUserProfilesByUserId( userId );
+    }
+
+
+    @PostMapping( "/user/{userId}" )
+    public void save( @PathVariable( "userId" ) Long userId, @RequestBody Iterable< Profile > selectedProfies ) {
+
+        User user = new User();
+        user.setId( userId );
+
+        userProfileService.save( user, selectedProfies );
+    }
+
+}

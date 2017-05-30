@@ -1,0 +1,37 @@
+<div class="container">
+	<div class="page-header">
+		<h1>POI</h1>
+	</div>
+	<div class="row form-group">
+		<div class="col-md-12">
+			<button type="button" class="btn btn-default" ng-click="redirectToPoiRegister()">Cadastrar</button>
+			<button type="button" class="btn btn-default" ng-click="redirectToCalculateProximity()">Calcular Proximidade</button>
+		</div>
+	</div>
+	<div class="row form-group">
+		<div class="col-md-12">
+			<table ng-table="tableParams"
+				class="table table-condensed table-bordered table-striped"
+				show-filter="true">
+				<thead>
+					<tr>
+						<th>Id</th>
+						<th>Nome</th>
+						<th>Coordenada X</th>
+						<th>Coordenada Y</th>
+					</tr>
+				</thead>
+				<tr ng-repeat="poi in $data">
+					<td title="Id" filter="{ id: 'number'}" sortable="'id'">
+						{{poi.id}}</td>
+					<td title="Nome" filter="{ name: 'text'}" sortable="'name'">
+						{{poi.name}}</td>
+					<td title="Coordenada X" filter="{ coordinateX: 'number'}"
+						sortable="'coordinateX'">{{poi.coordinateX}}</td>
+					<td title="Coordenada Y" filter="{ coordinateY: 'number'}"
+						sortable="'coordinateY'">{{poi.coordinateY}}</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+</div>

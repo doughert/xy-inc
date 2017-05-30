@@ -1,0 +1,141 @@
+package br.org.iamar.carbon.model;
+
+public class InstituicaoTurmaProjetoTarefa {
+
+	private String idInstituicao;
+	private String nomeInstituicao;
+	private String idTurma;
+	private String nomeTurma;
+	private String idProjeto;
+	private String nomeProjeto;
+	private String idTarefa;
+	private String nomeTarefa;
+	private String dataFimTarefa;
+	private String tipoTarefa;
+	private String statusTarefa;
+	private String prefixoId;
+	private String studentCode;
+	private String studentName;
+
+	public String getIdInstituicao() {
+		return idInstituicao;
+	}
+
+	public void setIdInstituicao(String idInstituicao) {
+		this.idInstituicao = idInstituicao;
+	}
+
+	public String getNomeInstituicao() {
+		return nomeInstituicao;
+	}
+
+	public void setNomeInstituicao(String nomeInstituicao) {
+		this.nomeInstituicao = nomeInstituicao;
+	}
+
+	public String getIdTurma() {
+		return idTurma;
+	}
+
+	public void setIdTurma(String idTurma) {
+		this.idTurma = idTurma;
+	}
+
+	public String getNomeTurma() {
+		return nomeTurma;
+	}
+
+	public void setNomeTurma(String nomeTurma) {
+		this.nomeTurma = nomeTurma;
+	}
+
+	public String getIdProjeto() {
+		return idProjeto;
+	}
+
+	public void setIdProjeto(String idProjeto) {
+		this.idProjeto = idProjeto;
+	}
+
+	public String getNomeProjeto() {
+		return nomeProjeto;
+	}
+
+	public void setNomeProjeto(String nomeProjeto) {
+		this.nomeProjeto = nomeProjeto;
+	}
+
+	public String getIdTarefa() {
+		return idTarefa;
+	}
+
+	public void setIdTarefa(String idTarefa) {
+		this.idTarefa = idTarefa;
+	}
+
+	public String getNomeTarefa() {
+		return nomeTarefa;
+	}
+
+	public void setNomeTarefa(String nomeTarefa) {
+		this.nomeTarefa = nomeTarefa;
+	}
+
+	public String getDataFimTarefa() {
+		return dataFimTarefa;
+	}
+
+	public void setDataFimTarefa(String dataFimTarefa) {
+		this.dataFimTarefa = dataFimTarefa;
+	}
+
+	public String getTipoTarefa() {
+		return tipoTarefa;
+	}
+
+	public void setTipoTarefa(String tipoTarefa) {
+		this.tipoTarefa = tipoTarefa;
+	}
+
+	public String getStatusTarefa() {
+		return statusTarefa;
+	}
+
+	public void setStatusTarefa(String statusTarefa) {
+		this.statusTarefa = statusTarefa;
+	}
+
+	public String getPrefixoId() {
+		return prefixoId;
+	}
+
+	public void setPrefixoId(String prefixoId) {
+		this.prefixoId = prefixoId;
+	}
+
+	public String getStudentCode() {
+		return studentCode;
+	}
+
+	public void setStudentCode(String studentCode) {
+		this.studentCode = studentCode;
+	}
+
+	public String getStudentName() {
+		return studentName;
+	}
+
+	public void setStudentName(String studentName) {
+		this.studentName = studentName;
+	}
+
+	@Override
+	public String toString() {
+		return "InstituicaoTurmaProjetoTarefa [idInstituicao=" + idInstituicao + ", nomeInstituicao=" + nomeInstituicao
+				+ ", idTurma=" + idTurma + ", nomeTurma=" + nomeTurma + ", idProjeto=" + idProjeto + ", nomeProjeto="
+				+ nomeProjeto + ", idTarefa=" + idTarefa + ", nomeTarefa=" + nomeTarefa + ", dataFimTarefa="
+				+ dataFimTarefa + ", tipoTarefa=" + tipoTarefa + ", statusTarefa=" + statusTarefa + ", prefixoId="
+				+ prefixoId + ", studentCode=" + studentCode + ", studentName=" + studentName + "]";
+	}
+
+}

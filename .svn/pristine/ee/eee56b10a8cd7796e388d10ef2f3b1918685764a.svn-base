@@ -1,0 +1,10 @@
+package br.org.iamar.firebase.model;
+
+public enum FirstAccessAppStatusEnum {
+	
+	PENDENTE,
+	USUARIO_NAO_ENCONTRADO,
+	USUARIO_ENCONTRADO,
+	ASSOCIADO_OUTRO_USUARIO;
+
+}

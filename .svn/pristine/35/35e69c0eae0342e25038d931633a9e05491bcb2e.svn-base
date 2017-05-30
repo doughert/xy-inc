@@ -1,0 +1,12 @@
+package br.org.iamar.sgci.repository;
+
+import org.springframework.data.repository.CrudRepository;
+
+import br.org.iamar.sgci.model.ProfileFeature;
+
+public interface ProfileFeatureRepository  extends CrudRepository<ProfileFeature, Long>{
+    
+    ProfileFeature findByProfileIdAndFeatureId(Long profileId, Long featureId);
+    
+
+}

@@ -1,0 +1,11 @@
+package br.org.iamar.sgci.repository;
+
+import org.springframework.data.repository.CrudRepository;
+
+import br.org.iamar.sgci.model.UserProfile;
+
+public interface UserProfileRepository extends CrudRepository<UserProfile, Long>{
+    
+    UserProfile findByUserIdAndProfileId(Long userId, Long profileId);
+
+}

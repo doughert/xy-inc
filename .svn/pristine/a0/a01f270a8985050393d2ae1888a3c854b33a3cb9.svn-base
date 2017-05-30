@@ -1,0 +1,40 @@
+package br.org.iamar.sgci.controller;
+
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import br.org.iamar.sgci.model.Feature;
+import br.org.iamar.sgci.model.Profile;
+import br.org.iamar.sgci.service.ProfileFeatureService;
+
+
+@RestController
+@RequestMapping( value = "/profile-feature" )
+public class ProfileFeatureController {
+
+    @Autowired
+    private ProfileFeatureService profileFeatureService;
+
+
+    @GetMapping( "/profile/{profileId}" )
+    public Iterable< Feature > findProfileFeaturesByProfileId( @PathVariable( "profileId" ) Long profileId ) {
+
+        return profileFeatureService.findProfileFeaturesByProfileId( profileId );
+    }
+    
+    @PostMapping( "/profile/{profileId}" )
+    public void save(@PathVariable( "profileId" ) Long profileId, @RequestBody Iterable<Feature> selectedFeatures) {
+        
+        Profile profile = new Profile();
+        profile.setId( profileId );
+        
+        profileFeatureService.save(profile, selectedFeatures);
+    }
+
+}

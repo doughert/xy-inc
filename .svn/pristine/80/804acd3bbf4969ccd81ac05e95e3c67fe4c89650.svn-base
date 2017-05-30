@@ -1,0 +1,36 @@
+package br.org.iamar.sgci.model;
+
+public enum UserTypeEnum {
+
+	EDUCANDO(Boolean.TRUE, new GrantEnum[] {}), EDUCADOR(Boolean.FALSE,
+			new GrantEnum[] { GrantEnum.REALIZAR_CHAMADA, GrantEnum.CRIAR_EVENTO }), GESTOR_INSTITUICAO(Boolean.FALSE,
+					new GrantEnum[] { GrantEnum.CRIAR_EVENTO }), GESTOR_IAMAR(Boolean.FALSE,
+							new GrantEnum[] { GrantEnum.CRIAR_EVENTO }), EMBAIXADOR(Boolean.FALSE,
+									new GrantEnum[] { GrantEnum.CRIAR_EVENTO }), VOLUNTARIO(Boolean.TRUE,
+											new GrantEnum[] {});
+
+	private UserTypeEnum(Boolean needApproval, GrantEnum[] grants) {
+		this.needApproval = needApproval;
+		this.grants = grants;
+	}
+
+	private Boolean needApproval;
+	private GrantEnum[] grants;
+
+	public Boolean getNeedApproval() {
+		return needApproval;
+	}
+
+	public void setNeedApproval(Boolean needApproval) {
+		this.needApproval = needApproval;
+	}
+
+	public GrantEnum[] getGrants() {
+		return grants;
+	}
+
+	public void setGrants(GrantEnum[] grants) {
+		this.grants = grants;
+	}
+
+}

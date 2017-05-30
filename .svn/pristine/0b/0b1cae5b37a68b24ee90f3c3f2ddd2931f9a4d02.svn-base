@@ -1,0 +1,39 @@
+var app = angular.module('app',['ngRoute', 'ngTable']);
+ 
+app.config(function($routeProvider, $locationProvider)
+{
+   $routeProvider
+   .when('/', {
+      templateUrl : 'app/views/home.html',
+      controller     : 'HomeCtrl',
+   })
+   .when('/user', {
+      templateUrl : 'app/views/user.html',
+      controller  : 'UserCtrl',
+   })
+   .when('/user/:id', {
+      templateUrl : 'app/views/user-edit.html',
+      controller  : 'UserEditCtrl',
+   })
+   .when('/user/:id/profiles', {
+      templateUrl : 'app/views/user-profiles.html',
+      controller  : 'UserProfilesCtrl',
+   })
+   .when('/profile', {
+      templateUrl : 'app/views/profile.html',
+      controller  : 'ProfileCtrl',
+   })
+   .when('/profile/:id/features', {
+      templateUrl : 'app/views/profile-features.html',
+      controller  : 'ProfileFeaturesCtrl',
+   })
+   .when('/post', {
+      templateUrl : 'app/views/post.html',
+      controller  : 'PostCtrl',
+   })
+   .when('/view/:id/profiles', {
+      templateUrl : 'app/views/view-post.html',
+      controller  : 'ViewPostCtrl',
+   })
+   .otherwise ({ redirectTo: '/' });
+});

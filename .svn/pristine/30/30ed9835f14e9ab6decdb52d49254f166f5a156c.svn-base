@@ -1,0 +1,91 @@
+package br.org.iamar.carbon.service.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
+
+import br.org.iamar.carbon.model.InstituicaoTurmaProjetoTarefa;
+import br.org.iamar.carbon.model.Pessoa;
+import br.org.iamar.carbon.repository.CarbonRepository;
+import br.org.iamar.carbon.service.CarbonService;
+import br.org.iamar.sgci.model.UserTypeEnum;
+
+@Service
+public class CarbonServiceImpl implements CarbonService {
+
+	private static final Logger LOG = LoggerFactory.getLogger(CarbonServiceImpl.class);
+
+	@Autowired
+	private CarbonRepository repository;
+
+	@Override
+	public List<Pessoa> findAllPessoas() {
+
+		List<Pessoa> pessoas = new ArrayList<Pessoa>();
+
+		/*
+		 * pessoas.addAll(repository.findGestoresAndEducadores());
+		 * 
+		 * pessoas.addAll(repository.findEducandos());
+		 * 
+		 * pessoas.addAll(repository.findEmbaixadoresAndVoluntarios());
+		 */
+
+		return pessoas;
+	}
+
+	@Override
+	public List<Pessoa> findUser(String fullName, String birthdate, String documentNumber, String classCode,
+			String userType, String studentCode) {
+
+		Assert.notNull(fullName);
+		Assert.notNull(birthdate);
+		Assert.notNull(userType);
+
+		if (UserTypeEnum.EDUCADOR.name().equals(userType) || UserTypeEnum.GESTOR_INSTITUICAO.name().equals(userType)
+				|| UserTypeEnum.GESTOR_IAMAR.name().equals(userType)) {
+
+			return repository.findGestoresAndEducadores(fullName, birthdate, documentNumber, userType);
+
+		} else if (UserTypeEnum.EDUCANDO.name().equals(userType)) {
+
+			Assert.notNull(studentCode);
+			return repository.findEducandos(fullName, birthdate, documentNumber, classCode, studentCode);
+
+		} else if (UserTypeEnum.VOLUNTARIO.name().equals(userType) || UserTypeEnum.EMBAIXADOR.name().equals(userType)) {
+
+			return repository.findEmbaixadoresAndVoluntarios(fullName, birthdate, documentNumber, userType);
+
+		}
+
+		return null;
+
+	}
+
+	@Override
+	public List<InstituicaoTurmaProjetoTarefa> findInstituicaoTurmaProjetoTarefaAtivos() {
+
+		List<InstituicaoTurmaProjetoTarefa> lista = new ArrayList<InstituicaoTurmaProjetoTarefa>();
+
+		List<InstituicaoTurmaProjetoTarefa> itpts = repository.findInstituicaoTurmaProjetoTarefaAtivos();
+		List<InstituicaoTurmaProjetoTarefa> itptsVoluntarios = repository
+				.findInstituicaoTurmaProjetoTarefaVoluntariosAtivos();
+
+		lista.addAll(itpts);
+		lista.addAll(itptsVoluntarios);
+
+		return lista;
+	}
+
+	@Override
+	public void insertEducando(String fullName, String birthdate, String documentNumber, String classCode) {
+		repository.insertEducando(fullName, birthdate, documentNumber, classCode);
+
+	}
+
+}

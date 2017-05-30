@@ -1,0 +1,78 @@
+<div class="page-header">
+	<div class="container">
+		<form ng-submit="submit()">
+			<div class="row">
+				<div class="col-md-3">
+					<div class="form-group">
+						<label for="id">ID</label>
+						<input type="number" class="form-control" id="id" ng-model="user.id" readonly disabled="disabled">
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-3">
+					<div class="form-group">
+						<label for="name">Nome</label>
+						<input type="text" class="form-control" id="name" ng-model="user.name">
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="form-group">
+						<label for="documentNumber">CPF</label>
+						<input type="text" class="form-control" id="documentNumber" ng-model="user.documentNumber">
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="form-group">
+						<label for="registration">Registro</label>
+						<input type="text" class="form-control" id="registration" ng-model="user.registration">
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-3">
+					<div class="form-group">
+						<label for="company">Compania</label>
+						<input type="text" class="form-control" id="company" ng-model="user.company">
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="form-group">
+						<label for="direction">Direção</label>
+						<input type="text" class="form-control" id="direction" ng-model="user.direction">
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="form-group">
+						<label for="department">Departamento</label>
+						<input type="text" class="form-control" id="department" ng-model="user.department">
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-3">
+					<div class="form-group">
+						<label for="dateOfBirth" class="col-2 col-form-label">Data de Nascimento</label>
+						<div class="col-10">
+							<input class="form-control" type="date" value="2011-08-19" id="dateOfBirth" ng-model="user.dateOfBirth">
+						</div>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="form-group">
+						<label for="zapeUser">Usuário do Zape</label>
+						<input type="text" class="form-control" id="zapeUser" ng-model="user.zapeUser" autocomplete="off">
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="form-group">
+						<label for="zapePassword">Senha do Zape</label>
+						<input type="password" class="form-control" id="zapePassword" ng-model="user.zapePassword" autocomplete="off">
+					</div>
+				</div>
+			</div>
+			<button type="submit" class="btn btn-primary">Salvar</button>
+			<button type="button" class="btn btn-default" ng-click="redirectProfileAssociation()">Associar Perfis</button>
+		</form>
+	</div>
+</div>

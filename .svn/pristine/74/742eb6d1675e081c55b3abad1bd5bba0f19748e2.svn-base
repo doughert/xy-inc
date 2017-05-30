@@ -1,0 +1,34 @@
+package br.org.iamar.sgci.repository.impl;
+
+
+import org.hibernate.Criteria;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Property;
+import org.hibernate.criterion.Restrictions;
+import org.springframework.stereotype.Repository;
+
+import br.org.iamar.sgci.model.Profile;
+import br.org.iamar.sgci.model.ViewPost;
+import br.org.iamar.sgci.repository.ViewPostCustomRepository;
+
+
+@Repository
+public class ViewPostCustomRepositoryImpl extends GenericCustomRepositoryImpl< ViewPost, Long > implements ViewPostCustomRepository {
+
+    @Override
+    @SuppressWarnings( "unchecked" )
+    public Iterable< Profile > findProfilePostersByProfileViewerId( Long profileViewerId ) {
+
+        DetachedCriteria detachedCriteria = DetachedCriteria.forClass( ViewPost.class );
+        detachedCriteria.add( Restrictions.eq( "profileViewer.id", profileViewerId ) );
+        detachedCriteria.createCriteria( "profilePoster" );
+        detachedCriteria.setProjection( Projections.property( "profilePoster.id" ) );
+
+        Criteria criteria = getSession().createCriteria( Profile.class );
+        criteria.add( Property.forName( "id" ).in( detachedCriteria ) );
+
+        return criteria.list();
+    }
+
+}

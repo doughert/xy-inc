@@ -1,0 +1,9 @@
+package br.org.iamar.sgci.repository;
+
+import org.springframework.data.repository.CrudRepository;
+
+import br.org.iamar.sgci.model.Feature;
+
+public interface FeatureRepository extends CrudRepository<Feature, Long>{
+
+}

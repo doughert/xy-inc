@@ -1,0 +1,12 @@
+package br.org.iamar.sgci.model;
+
+public enum UserTypeEnum {
+	
+	EDUCANDO,
+	EDUCADOR,
+	GESTOR_DE_INSTITUICAO,
+	GESTOR_IAMAR,
+	EMBAIXADOR,
+	VOLUNTARIO;
+
+}

@@ -1,0 +1,12 @@
+package br.org.iamar.carbon.model;
+
+public enum TipoPessoaEnum {
+	
+	EDUCANDO,
+	EDUCADOR,
+	GESTOR_INSTITUICAO,
+	GESTOR_IAMAR,
+	EMBAIXADOR,
+	VOLUNTARIO;
+	
+}

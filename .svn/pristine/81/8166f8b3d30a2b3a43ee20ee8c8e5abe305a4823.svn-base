@@ -1,0 +1,362 @@
+package br.org.iamar.sgci.executor;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
+import br.org.iamar.carbon.model.Pessoa;
+import br.org.iamar.carbon.model.TipoPessoaEnum;
+import br.org.iamar.carbon.service.CarbonService;
+import br.org.iamar.firebase.model.Class;
+import br.org.iamar.firebase.model.FirstAccessApp;
+import br.org.iamar.firebase.model.FirstAccessAppStatusEnum;
+import br.org.iamar.firebase.model.People;
+import br.org.iamar.firebase.model.Profile;
+import br.org.iamar.sgci.model.Institution;
+import br.org.iamar.sgci.model.User;
+import br.org.iamar.sgci.model.UserTypeEnum;
+
+@Component
+@Scope("prototype")
+public class FirstAccessAppExecutor {
+
+	private static final Logger LOG = LoggerFactory.getLogger(FirstAccessAppExecutor.class);
+
+	@Autowired
+	private FirebaseDatabase firebaseDatabase;
+
+	@Autowired
+	private CarbonService carbonService;
+
+	private FirstAccessApp firstAccessApp;
+	private Map<String, Object> peopleMap;
+	private Map<String, Class> classMap;
+
+	public void execute(String key, FirstAccessApp firstAccessApp) {
+
+		this.firstAccessApp = firstAccessApp;
+
+		if (FirstAccessAppStatusEnum.PENDENTE.name().equals(firstAccessApp.getStatus())) {
+
+			List<Pessoa> pessoas = carbonService.findUser(firstAccessApp.getFullname(), firstAccessApp.getBirthdate(),
+					firstAccessApp.getDocumentNumber(), firstAccessApp.getClassCode(), firstAccessApp.getUserType(),
+					firstAccessApp.getStudentCode());
+
+			if (pessoas.size() > 0) {
+
+				try {
+					Thread.sleep(4000);
+				} catch (InterruptedException e) {
+					LOG.error("Erro execute", e);
+				}
+
+				makePeopleHash(pessoas);
+				makeClassHash(pessoas);
+
+				LOG.info("Pessoa importada: " + peopleMap);
+
+				updatePeople();
+
+				updateFirstAccessAppStatus(key, FirstAccessAppStatusEnum.USUARIO_ENCONTRADO.name());
+			} else {
+				updateFirstAccessAppStatus(key, FirstAccessAppStatusEnum.USUARIO_NAO_ENCONTRADO.name());
+			}
+		}
+	}
+
+	private void updatePeople() {
+
+		People pleople = (People) peopleMap.get(firstAccessApp.getUidUser());
+
+		DatabaseReference profilesRef = firebaseDatabase.getReference("people").child(firstAccessApp.getUidUser())
+				.child("profiles");
+		profilesRef.setValue(pleople.getProfiles());
+
+		DatabaseReference displayNameRef = firebaseDatabase.getReference("people").child(firstAccessApp.getUidUser())
+				.child("displayName");
+
+		displayNameRef.setValue(pleople.getDisplayName());
+
+		DatabaseReference birthDateRef = firebaseDatabase.getReference("people").child(firstAccessApp.getUidUser())
+				.child("birthDate");
+
+		birthDateRef.setValue(pleople.getBirthDate());
+
+	}
+
+	private void updateFirstAccessAppStatus(String key, String status) {
+		firebaseDatabase.getReference("firstAccessApp").child(key).child("status").setValue(status);
+	}
+
+	private void makePeopleHash(List<Pessoa> pessoas) {
+
+		Map<String, User> userMap = new HashMap<String, User>();
+
+		for (Pessoa pessoa : pessoas) {
+
+			userMap = fillUserMap(userMap, pessoa);
+		}
+
+		peopleMap = fillPeopleMap(userMap);
+
+	}
+
+	private Map<String, Object> fillPeopleMap(Map<String, User> userMap) {
+
+		Map<String, Object> peopleMap = new HashMap<String, Object>();
+
+		Object[] keys = userMap.keySet().toArray();
+
+		for (Object key : keys) {
+			String keyString = (String) key;
+
+			Map<String, String> displayGroup = new HashMap<String, String>();
+			Map<String, String> postingGroup = new HashMap<String, String>();
+
+			User userCarbon = userMap.get(keyString);
+
+			fillGroups(displayGroup, postingGroup, userCarbon);
+
+			People people = new People();
+			people.setDisplayName(userCarbon.getName());
+			people.setBirthDate(userCarbon.getBirthDate());
+
+			Map<String, Object> profiles = new HashMap<String, Object>();
+
+			Profile profile = new Profile();
+			profile.setCode(userCarbon.getUserType());
+			profile.setName(userCarbon.getUserType());
+			profile.setDisplayGroup(displayGroup);
+			profile.setPostingGroup(postingGroup);
+			profile.setRegion(userCarbon.getRegion());
+			profile.setGrants(fillGrants(userCarbon.getUserType()));
+
+			profiles.put(userCarbon.getUserType(), profile);
+
+			people.setProfiles(profiles);
+
+			if (userCarbon.getClasses() != null) {
+				Map<String, String> classes = new HashMap<String, String>();
+				for (br.org.iamar.sgci.model.Class clazz : userCarbon.getClasses()) {
+
+					classes.put("C" + clazz.getId().toString(), clazz.getName());
+				}
+				profile.setClasses(classes);
+			}
+
+			if (userCarbon.getProjects() != null) {
+				Map<String, String> projects = new HashMap<String, String>();
+				for (br.org.iamar.sgci.model.Project project : userCarbon.getProjects()) {
+
+					projects.put("P" + project.getPrefixoId() + project.getId().toString(), project.getName());
+				}
+				profile.setProjects(projects);
+			}
+
+			peopleMap.put(firstAccessApp.getUidUser(), people);
+		}
+
+		return peopleMap;
+
+	}
+
+	private Map<String, Boolean> fillGrants(String userType) {
+
+		Map<String, Boolean> grants = new HashMap<String, Boolean>();
+
+		if (UserTypeEnum.EDUCANDO.name().equals(userType)) {
+			
+		} else if (UserTypeEnum.EDUCADOR.name().equals(userType)) {
+			grants.put("REALIZAR_CHAMADA", Boolean.TRUE);
+		} else if (UserTypeEnum.GESTOR_INSTITUICAO.name().equals(userType)) {
+			grants.put("CRIAR_EVENTO", Boolean.TRUE);
+		} else if (UserTypeEnum.GESTOR_IAMAR.name().equals(userType)) {
+			grants.put("CRIAR_EVENTO", Boolean.TRUE);
+		} else if (UserTypeEnum.EMBAIXADOR.name().equals(userType)) {
+			grants.put("CRIAR_EVENTO", Boolean.TRUE);
+		} else if (UserTypeEnum.VOLUNTARIO.name().equals(userType)) {
+			grants.put("CRIAR_EVENTO", Boolean.TRUE);
+		} 
+
+		return grants;
+	}
+
+	private Map<String, User> fillUserMap(Map<String, User> userMap, Pessoa pessoa) {
+		String chave = firstAccessApp.getUidUser();
+
+		User user = userMap.get(chave);
+
+		if (user == null) {
+			user = new User(null, pessoa.getNome(), pessoa.getTipoPessoa(), pessoa.getRegiao(),
+					pessoa.getDataNascimento());
+		} else {
+			user.setRegion(pessoa.getRegiao());
+		}
+
+		if (pessoa.getIdProjeto() != null) {
+			user.addProject(new br.org.iamar.sgci.model.Project(Long.parseLong(pessoa.getIdProjeto()),
+					pessoa.getNomeProjeto(), pessoa.getPrefixoId()));
+		}
+		user = setClassAndInstitution(pessoa, user);
+
+		userMap.put(chave, user);
+
+		return userMap;
+	}
+
+	private User setClassAndInstitution(Pessoa pessoa, User user) {
+
+		String userType = user.getUserType();
+
+		if (TipoPessoaEnum.EDUCANDO.name().equals(userType) || TipoPessoaEnum.EDUCADOR.name().equals(userType)
+				|| TipoPessoaEnum.GESTOR_INSTITUICAO.name().equals(userType)) {
+			user.addInstitution(
+					new Institution(Long.parseLong(pessoa.getIdInstituicao()), pessoa.getNomeInstituicao()));
+
+			if (TipoPessoaEnum.EDUCANDO.name().equals(userType) || TipoPessoaEnum.EDUCADOR.name().equals(userType)) {
+				user.addClass(
+						new br.org.iamar.sgci.model.Class(Long.parseLong(pessoa.getIdTurma()), pessoa.getNomeTurma()));
+			}
+		}
+
+		return user;
+	}
+
+	private void fillGroups(Map<String, String> displayGroup, Map<String, String> postingGroup, User userCarbon) {
+		if (TipoPessoaEnum.EDUCANDO.name().equals(userCarbon.getUserType())) {
+
+			for (br.org.iamar.sgci.model.Class clazz : userCarbon.getClasses()) {
+				postingGroup.put("PROFESOR" + clazz.getId(), "Professor da turma " + clazz.getName());
+
+				displayGroup.put("TURMA" + clazz.getId(), "Turma " + clazz.getName());
+			}
+
+			for (Institution institution : userCarbon.getInstitutions()) {
+				displayGroup.put("INSTITUICAO" + institution.getId(), "Instituição  " + institution.getName());
+			}
+
+			displayGroup.put("PUBLICO", "Público");
+		} else if (TipoPessoaEnum.EDUCADOR.name().equals(userCarbon.getUserType())) {
+
+			for (br.org.iamar.sgci.model.Class clazz : userCarbon.getClasses()) {
+				postingGroup.put("TURMA" + clazz.getId(), "Turma " + clazz.getName());
+
+				displayGroup.put("PROFESOR" + clazz.getId(), "Professor da turma " + clazz.getName());
+			}
+
+			for (Institution institution : userCarbon.getInstitutions()) {
+				postingGroup.put("GINSTITUICAO" + institution.getId(),
+						"Gestão da instituição " + institution.getName());
+
+				displayGroup.put("INSTITUICAO" + institution.getId(), "Instituição " + institution.getName());
+			}
+
+			displayGroup.put("PUBLICO", "Público");
+		} else if (TipoPessoaEnum.GESTOR_INSTITUICAO.name().equals(userCarbon.getUserType())) {
+
+			String region = userCarbon.getRegion().replaceAll(" ", "_");
+
+			for (Institution institution : userCarbon.getInstitutions()) {
+
+				postingGroup.put("INSTITUICAO" + institution.getId(), "Instituição " + institution.getName());
+				displayGroup.put("GINSTITUICAO" + institution.getId(),
+						"Gestão da instituição " + institution.getName());
+
+			}
+
+			postingGroup.put("GINSTITUICOES", "Gestores de Instituição");
+			postingGroup.put("GIAMAR", "Gestão do IAMAR");
+			postingGroup.put("REGIAO_" + region, "Região " + userCarbon.getRegion());
+
+			displayGroup.put("REGIAO_" + region, "Região " + userCarbon.getRegion());
+			displayGroup.put("PUBLICO", "Público");
+		} else if (TipoPessoaEnum.GESTOR_IAMAR.name().equals(userCarbon.getUserType())) {
+
+			postingGroup.put("PUBLICO", "Público");
+
+			displayGroup.put("GINSTITUICOES", "Gestores de Instituição");
+			displayGroup.put("EMBAIXADORES", "Embaixadores");
+			displayGroup.put("GIAMAR", "Gestão do IAMAR");
+			displayGroup.put("PUBLICO", "Público");
+
+		} else if (TipoPessoaEnum.EMBAIXADOR.name().equals(userCarbon.getUserType())) {
+
+			String region = userCarbon.getRegion().replaceAll(" ", "_");
+
+			postingGroup.put("VOLUNTARIO_REGIAO_" + region, "Voluntários região " + userCarbon.getRegion());
+			postingGroup.put("GVENCER", "Grupo Vencer");
+			postingGroup.put("EMBAIXADORES", "Embaixadores");
+
+			displayGroup.put("EMBAIXADOR_REGIAO_" + region, "Embaixador região " + userCarbon.getRegion());
+			displayGroup.put("PUBLICO", "Público");
+			displayGroup.put("EMBAIXADORES", "Embaixadores");
+
+		} else if (TipoPessoaEnum.VOLUNTARIO.name().equals(userCarbon.getUserType())) {
+
+			String region = userCarbon.getRegion().replaceAll(" ", "_");
+
+			postingGroup.put("EMBAIXADOR_REGIAO_" + region, "Embaixador região " + userCarbon.getRegion());
+
+			displayGroup.put("VOLUNTARIO_REGIAO_" + region, "Voluntários região " + userCarbon.getRegion());
+			displayGroup.put("PUBLICO", "Público");
+		}
+	}
+
+	private Map<String, Class> fillClassMap(Pessoa pessoa) {
+
+		String idTurma = pessoa.getIdTurma();
+
+		if (!StringUtils.isEmpty(idTurma)) {
+			Class clazz = classMap.get("C" + idTurma);
+
+			if (clazz == null) {
+				clazz = new Class(pessoa.getNomeTurma());
+			}
+
+			if (!StringUtils.isEmpty(pessoa.getIdProjeto())) {
+				Map<String, String> projects = clazz.getProjects();
+
+				if (projects != null && !projects.isEmpty()) {
+					String key = projects.keySet().iterator().next();
+
+					// Rule to keep the project bigger id
+					if (Long.parseLong(key.replace("P", "")) < Long.parseLong(pessoa.getIdProjeto())) {
+						projects = new HashMap<String, String>();
+					}
+				} else if (projects == null) {
+					projects = new HashMap<String, String>();
+				}
+
+				projects.put("P" + pessoa.getPrefixoId() + pessoa.getIdProjeto(), pessoa.getNomeProjeto());
+
+				clazz.setProjects(projects);
+			}
+
+			classMap.put("C" + idTurma, clazz);
+		}
+
+		return classMap;
+	}
+
+	private void makeClassHash(List<Pessoa> pessoas) {
+		classMap = new HashMap<String, br.org.iamar.firebase.model.Class>();
+
+		for (Pessoa pessoa : pessoas) {
+
+			classMap = fillClassMap(pessoa);
+
+		}
+
+	}
+
+}

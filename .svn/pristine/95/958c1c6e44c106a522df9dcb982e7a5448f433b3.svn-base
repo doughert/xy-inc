@@ -1,0 +1,205 @@
+app.controller('HomeCtrl', function($rootScope, $location) {
+	$rootScope.activetab = $location.path();
+});
+
+app.controller('UserCtrl', function($rootScope, $location, NgTableParams, $scope, $http) {
+	$rootScope.activetab = $location.path();
+
+	$http.get('user').success(function(users) {
+		$scope.tableParams = new NgTableParams({}, {
+			dataset: users
+		});
+	});
+
+	$scope.redirectUserEdit = function(userId) {
+		$location.path('user/' + userId);
+	};
+});
+
+app.controller('ProfileCtrl', function($rootScope, $location, NgTableParams, $scope, $http) {
+	$rootScope.activetab = $location.path();
+
+	$http.get('profile').success(function(profiles) {
+		$scope.tableParams = new NgTableParams({}, {
+			dataset: profiles
+		});
+	});
+
+	$scope.redirectFeatureAssociation = function(profileId) {
+		$location.path('profile/' + profileId + '/features');
+	};
+	
+	$scope.redirectProfileAssociation  = function(profileId) {
+		$location.path('view/' + profileId + '/profiles');
+	};
+});
+
+app.controller('UserEditCtrl', function($scope, $routeParams, $http, $location, $route) {
+	var userId = parseInt($routeParams.id);
+
+	$http.get('user/' + userId).success(function(user) {
+		$scope.user = user;
+	});
+	
+	function getCSRFTokenValue(){
+		return document.querySelector("meta[name='_csrf']").getAttribute("content");
+	};
+	
+	$scope.submit = function() {
+		$http.post('user', $scope.user).success(function(data){
+			$route.reload();
+		});
+	};
+	
+	$scope.redirectProfileAssociation = function() {
+		$location.path('user/' + userId + '/profiles');
+	};
+});
+
+app.controller('UserProfilesCtrl', function($scope, $routeParams, NgTableParams, $http, $route) {
+	var userId = parseInt($routeParams.id);
+	$scope.selectedProfiles = {};
+	
+	$http.get('user/' + userId).success(function(user) {
+		$scope.user = user;
+	});
+
+	$http.get('user-profile/user/' + userId).success(function(profiles) {
+		angular.forEach(profiles, function(profile) {
+			$scope.selectedProfiles[profile.id] = true;
+		});
+
+		$http.get('profile').success(function(profiles) {
+
+			angular.forEach(profiles, function(profile) {
+				profile.isRowSelected = !!$scope.selectedProfiles[profile.id];
+			});
+
+			$scope.tableParams = new NgTableParams({}, {
+				dataset: profiles
+			});
+		});
+
+	});
+	
+	$scope.save = function(){
+		
+		var profiles = [];
+		
+		for(var i in $scope.selectedProfiles) {
+			if(!!$scope.selectedProfiles[i]) {
+				profiles.push({id: i});
+			}
+		}
+		
+		$http.post('user-profile/user/' + userId, profiles).success(function(data){
+			$route.reload();
+		});
+		
+	};
+
+});
+
+app.controller('ProfileFeaturesCtrl', function($scope, $routeParams, $http, NgTableParams, $route) {
+	var profileId = parseInt($routeParams.id);
+	$scope.selectedFeatures = {};
+
+	$http.get('profile/' + profileId).success(function(profile) {
+		$scope.profile = profile;
+	});
+
+	$http.get('profile-feature/profile/' + profileId).success(function(features) {
+		angular.forEach(features, function(feature) {
+			$scope.selectedFeatures[feature.id] = true;
+		});
+
+		$http.get('feature').success(function(features) {
+
+			angular.forEach(features, function(feature) {
+				feature.isRowSelected = !!$scope.selectedFeatures[feature.id];
+			});
+
+			$scope.tableParams = new NgTableParams({}, {
+				dataset: features
+			});
+		});
+		
+	});
+	
+	$scope.save = function(){
+		
+		var features = [];
+		
+		for(var i in $scope.selectedFeatures) {
+			if(!!$scope.selectedFeatures[i]) {
+				features.push({id: i});
+			}
+		}
+		
+		$http.post('profile-feature/profile/' + profileId, features).success(function(data){
+			$route.reload();
+		});
+		
+	};
+});
+
+app.controller('PostCtrl', function($scope, $routeParams, $http, NgTableParams) {
+	var profileId = parseInt($routeParams.id);
+
+	$http.get('view-post/' + profileId).success(function(profile) {
+		$scope.profile = profile;
+	});
+
+	$http.get('feature').success(function(features) {
+		$scope.tableParams = new NgTableParams({}, {
+			dataset: features
+		});
+	});
+
+	$http.get('profile-feature/profile/' + profileId).success(function(features) {
+	});
+});
+
+app.controller('ViewPostCtrl', function($scope, $routeParams, $http, NgTableParams, $route) {
+	var profileViewerId = parseInt($routeParams.id);
+	$scope.selectedProfiles = {};
+
+	$http.get('profile/' + profileViewerId).success(function(profileViewer) {
+		$scope.profileViewer = profileViewer;
+	});
+	
+	$http.get('view-post/profile-viewer/' + profileViewerId).success(function(profiles) {
+		angular.forEach(profiles, function(profile) {
+			$scope.selectedProfiles[profile.id] = true;
+		});
+
+		$http.get('profile').success(function(profiles) {
+
+			angular.forEach(profiles, function(profile) {
+				profile.isRowSelected = !!$scope.selectedProfiles[profile.id];
+			});
+
+			$scope.tableParams = new NgTableParams({}, {
+				dataset: profiles
+			});
+		});
+		
+	});
+	
+	$scope.save = function(){
+		
+		var profiles = [];
+		
+		for(var i in $scope.selectedProfiles) {
+			if(!!$scope.selectedProfiles[i]) {
+				profiles.push({id: i});
+			}
+		}
+		
+		$http.post('view-post/profileViewer/' + profileViewerId, profiles).success(function(data){
+			$route.reload();
+		});
+		
+	};
+
+});

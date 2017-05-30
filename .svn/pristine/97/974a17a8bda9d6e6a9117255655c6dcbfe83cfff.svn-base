@@ -1,0 +1,15 @@
+package br.org.iamar.sgci.service;
+
+
+import br.org.iamar.sgci.model.Feature;
+import br.org.iamar.sgci.model.Profile;
+
+
+public interface ProfileFeatureService {
+
+    Iterable< Feature > findProfileFeaturesByProfileId( Long profileId );
+
+
+    void save( Profile profile, Iterable< Feature > selectedFeatures );
+
+}

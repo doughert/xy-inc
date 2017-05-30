@@ -1,0 +1,17 @@
+package br.org.iamar.sgci;
+
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
+
+
+@SpringBootApplication
+@ComponentScan( basePackages = { "br.org.iamar" } )
+public class SgciApplication {
+
+    public static void main( String[] args ) {
+
+        SpringApplication.run( SgciApplication.class, args );
+    }
+}
