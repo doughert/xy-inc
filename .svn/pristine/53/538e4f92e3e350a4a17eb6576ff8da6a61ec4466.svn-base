@@ -1,9 +1,0 @@
-package br.org.iamar.carbon.repository;
-
-import org.springframework.data.repository.CrudRepository;
-
-import br.org.iamar.carbon.model.Pessoa;
-
-public interface PessoaRepository extends CrudRepository<Pessoa, Long>{
-
-}

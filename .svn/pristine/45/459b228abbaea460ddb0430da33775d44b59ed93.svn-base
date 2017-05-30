@@ -1,9 +1,0 @@
-package br.org.iamar.carbon.service;
-
-import br.org.iamar.carbon.model.Pessoa;
-
-public interface PessoaService {
-    
-    Iterable<Pessoa> findAll();
-
-}

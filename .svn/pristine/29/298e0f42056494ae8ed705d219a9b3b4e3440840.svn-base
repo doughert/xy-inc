@@ -1,9 +1,0 @@
-package br.org.iamar.sgci.service;
-
-import br.org.iamar.sgci.model.Feature;
-
-public interface FeatureService {
-	
-	Iterable<Feature> findAll();
-
-}

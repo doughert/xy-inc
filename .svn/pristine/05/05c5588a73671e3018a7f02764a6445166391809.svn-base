@@ -1,8 +1,0 @@
-package br.org.iamar.sgci.model;
-
-public enum GrantEnum {
-	
-	REALIZAR_CHAMADA,
-	CRIAR_EVENTO;
-
-}

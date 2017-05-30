@@ -1,5 +1,0 @@
-package br.org.iamar.sgci.service;
-
-public interface LoginService {
-
-}

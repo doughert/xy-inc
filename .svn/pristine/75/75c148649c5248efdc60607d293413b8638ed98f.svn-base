@@ -1,9 +1,0 @@
-package br.org.iamar.sgci.repository;
-
-import br.org.iamar.sgci.model.Profile;
-
-public interface UserProfileCustomRepository {
-	
-	Iterable<Profile> findUserProfilesByUserId(Long userId);
-
-}

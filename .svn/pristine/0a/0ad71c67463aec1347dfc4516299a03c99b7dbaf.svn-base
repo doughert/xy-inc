@@ -1,9 +1,0 @@
-package br.org.iamar.sgci.repository;
-
-import br.org.iamar.sgci.model.Feature;
-
-public interface ProfileFeatureCustomRepository {
-	
-	Iterable<Feature> findProfileFeaturesByProfileId(Long profileId);
-
-}
