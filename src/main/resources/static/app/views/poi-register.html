@@ -1,27 +1,28 @@
-<div class="page-header">
-	<div class="container">
-		<form ng-submit="submit()">
-			<div class="row">
-				<div class="col-md-3">
-					<div class="form-group">
-						<label for="name">Nome</label>
-						<input type="text" class="form-control" id="name" ng-model="poi.name">
-					</div>
-				</div>
-				<div class="col-md-3">
-					<div class="form-group">
-						<label for="coordinate-x">Coordenada X</label>
-						<input type="text" class="form-control" id="coordinate-x" ng-model="poi.coordinateX">
-					</div>
-				</div>
-				<div class="col-md-3">
-					<div class="form-group">
-						<label for="coordinate-y">Coordenada Y</label>
-						<input type="text" class="form-control" id="coordinate-y" ng-model="poi.coordinateY">
-					</div>
+<div class="container">
+	<div class="page-header">
+		<h1>Cadastro de POI</h1>
+	</div>
+	<form ng-submit="submit()">
+		<div class="row">
+			<div class="col-md-3">
+				<div class="form-group">
+					<label for="name">Nome</label>
+					<input type="text" class="form-control" id="name" ng-model="poi.name">
 				</div>
 			</div>
-			<button type="submit" class="btn btn-primary">Salvar</button>
-		</form>
-	</div>
+			<div class="col-md-3">
+				<div class="form-group">
+					<label for="coordinate-x">Coordenada X</label>
+					<input type="text" class="form-control" id="coordinate-x" ng-model="poi.coordinateX">
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="form-group">
+					<label for="coordinate-y">Coordenada Y</label>
+					<input type="text" class="form-control" id="coordinate-y" ng-model="poi.coordinateY">
+				</div>
+			</div>
+		</div>
+		<button type="submit" class="btn btn-primary">Salvar</button>
+	</form>
 </div>

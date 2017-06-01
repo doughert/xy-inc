@@ -4,8 +4,10 @@ import com.xyinc.poi.model.Poi;
 
 public interface PoiService {
 
-	public Iterable<Poi> findAll();
+	Iterable<Poi> findAll();
 
-	public Poi save(Poi user);
+	Poi save(Poi user);
+
+	Iterable<Poi> listByProximity(Integer coordinateX, Integer coordinateY, Integer maxDistance);
 
 }

@@ -1,0 +1,46 @@
+<div class="container">
+	<div class="page-header">
+		<h1>Cálculo de proximidade</h1>
+	</div>
+	<form ng-submit="submit()">
+		<div class="row">
+			<div class="col-md-3">
+				<div class="form-group">
+					<label for="coordinate-x">Coordenada X</label>
+					<input type="number" class="form-control" id="coordinate-x" ng-model="filter.coordinateX">
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="form-group">
+					<label for="coordinate-y">Coordenada Y</label>
+					<input type="number" class="form-control" id="coordinate-y" ng-model="filter.coordinateY">
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="form-group">
+					<label for="maxDistance">Distancia Máxima</label>
+					<input type="number" class="form-control" id="name" ng-model="filter.maxDistance">
+				</div>
+			</div>
+		</div>
+		<button type="submit" class="btn btn-primary" data-toggle="modal" data-target="#myModal">Calcular</button>
+	</form>
+
+	<div class="modal fade" id="myModal" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+					<h4 class="modal-title">POIs a menos de {{filter.maxDistance}}m</h4>
+				</div>
+				<div class="modal-body">
+					<p ng-repeat="poi in pois">{{poi.name}}</p>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>
+				</div>
+			</div>
+
+		</div>
+	</div>
+</div>

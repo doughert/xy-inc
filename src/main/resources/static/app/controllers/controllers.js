@@ -35,8 +35,8 @@ app.controller('PoiRegisterCtrl', function($scope, $http, $location) {
 app.controller('PoiProximityCalculationCtrl', function($scope, $http, $location) {
 
 	$scope.submit = function() {
-		$http.post('poi', $scope.poi).success(function(data) {
-			$location.path('poi');
+		$http.get('poi/listByProximity', {params: $scope.filter}).success(function(data) {
+			$scope.pois = data;
 		});
 	};
 
