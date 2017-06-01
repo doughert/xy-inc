@@ -13,11 +13,17 @@ Para alterar os dados da coneção com o banco de dados, altere o arquivo /src/m
 Após a criação das tabelas, execute os seguintes inserts no seu client do MySql para inserir os dados iniciais:
 
 INSERT INTO poi (id,coordinate_x,coordinate_y,name) VALUES (1,27,12,'Lanchonete');
+
 INSERT INTO poi (id,coordinate_x,coordinate_y,name) VALUES (2,31,18,'Posto');
+
 INSERT INTO poi (id,coordinate_x,coordinate_y,name) VALUES (3,15,12,'Joalheria');
+
 INSERT INTO poi (id,coordinate_x,coordinate_y,name) VALUES (4,19,21,'Floricultura');
+
 INSERT INTO poi (id,coordinate_x,coordinate_y,name) VALUES (5,12,8,'Pub');
+
 INSERT INTO poi (id,coordinate_x,coordinate_y,name) VALUES (6,23,6,'Supermercado');
+
 INSERT INTO poi (id,coordinate_x,coordinate_y,name) VALUES (7,28,2,'Churrascaria');
 
 Foi criada uma autenticação através do spring-security. Por default, existe somente um usuário com o login:user e senha:password.
