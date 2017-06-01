@@ -32,3 +32,10 @@ Para alterar os dados de autenticação, altere a classe com.xyinc.poi.WebSecuri
 Após se logar ao sistema, clique na aba POI. 
 Essa tela lista os POIs já cadastrados. 
 Dela, você pode cadastrar novos POIs através do botão cadastrar, ou realizar o cálculo de proximidade, através do botão Cálculo de Próximidade.
+
+
+A aplicação expõe os seguintes serviços HTTP:
+
+GET /poi
+POST /poi ( Request payload {"name":"Teste","coordinateX":"1","coordinateY":"1"} )
+GET /pot/listByProximity?coordinateX=&coordinateY=&maxDistance=
