@@ -67,5 +67,11 @@ public class PoiServiceImpl implements PoiService {
 		}
 		return result;
 	}
+	
+	@Override
+	@Transactional(rollbackOn = Exception.class)
+	public void deleteAll() {
+		repository.deleteAll();
+	}
 
 }

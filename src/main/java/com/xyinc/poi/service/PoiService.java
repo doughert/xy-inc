@@ -10,4 +10,6 @@ public interface PoiService {
 
 	Iterable<Poi> listByProximity(Integer coordinateX, Integer coordinateY, Integer maxDistance);
 
+	void deleteAll();
+
 }

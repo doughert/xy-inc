@@ -1,6 +1,6 @@
 package com.xyinc.poi;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,6 +22,8 @@ public class PoiApplicationTests {
 
 	@Test
 	public void contextLoads() {
+		
+		service.deleteAll();
 
 		Poi lanchonete = new Poi(27, 12, "Lanchonete");
 		service.save(lanchonete);
@@ -44,7 +46,9 @@ public class PoiApplicationTests {
 		Poi churrascaria = new Poi(28, 2, "Churrascaria");
 		service.save(churrascaria);
 
-		assertThat(service.listByProximity(20, 20, 10)).isNotEmpty();
+		Iterable<Poi> result = service.listByProximity(20, 10, 10);
+		
+		assertThat(result).hasSize(4);
 
 	}
 
