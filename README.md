@@ -8,7 +8,7 @@ no mesmo diretório em que se encontra o pom.xml.
 
 O projeto se conecta a um banco MySql. O banco deve conter uma database chamada "poi". 
 Na primeira execução através do spring-boot:run, o hibernate criará o que for necessário nessa database.
-Para alterar os dados da coneção com o banco de dados, altere o arquivo /src/main/resources/application.properties
+Para alterar os dados da conexão com o banco de dados, altere o arquivo /src/main/resources/application.properties
 
 Após a criação das tabelas, execute os seguintes inserts no seu client do MySql para inserir os dados iniciais:
 
